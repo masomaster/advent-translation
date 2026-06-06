@@ -117,6 +117,7 @@ export default function TranslationPanel({
               <Tools
                 dayData={dayData}
                 englishCitation={englishCitation}
+                language={language}
                 officialTranslation={officialTranslation}
                 setOfficialTranslation={setOfficialTranslation}
                 translation={translation}
@@ -124,7 +125,6 @@ export default function TranslationPanel({
                 setFeedbackHtml={setFeedbackHtml}
                 paraBibleLink={paraBibleLink}
                 activeSections={activeSections}
-                setActiveSections={setActiveSections}
                 toggleSection={toggleSection}
                 isActive={isActive}
               />

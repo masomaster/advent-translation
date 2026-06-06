@@ -12,6 +12,7 @@ import Accordion from "../Accordion/Accordion.jsx";
 export default function Tools({
   dayData,
   englishCitation,
+  language,
   feedbackHtml,
   setFeedbackHtml,
   paraBibleLink,
@@ -19,17 +20,9 @@ export default function Tools({
   officialTranslation,
   setOfficialTranslation,
   activeSections,
-  setActiveSections,
+  isActive,
+  toggleSection,
 }) {
-  // Function for toggling accordion sections
-  const isActive = (index) => activeSections.includes(index);
-  const toggleSection = (index) => {
-    setActiveSections((prev) =>
-      prev.includes(index)
-        ? prev.filter((sectionIndex) => sectionIndex !== index)
-        : [...prev, index]
-    );
-  };
   const infoButton = (
     <>
       <FontAwesomeIcon
@@ -37,7 +30,7 @@ export default function Tools({
         icon={faInfoCircle}
         style={{ marginLeft: "10px" }}
         data-tooltip-id="info"
-        data-tooltip-html={`We use OpenAI's ChatGPT to generate feedback <br />strictly on word choice, grammar, and syntax.<br />No personal data is shared or stored.`}
+        data-tooltip-html={`Feedback is generated with Anthropic Claude <br />on word choice, grammar, syntax, and fidelity to the Greek/Hebrew.<br />Your translation text is sent only for this request and is not stored for training.`}
         data-tooltip-place="top"
         data-tooltip-wrapper="span"
       />
@@ -45,42 +38,71 @@ export default function Tools({
     </>
   );
 
-  // Show NET translation and feedback on opening accordion
+  const officialOpen = activeSections.includes("official-translation");
+  const feedbackOpen = activeSections.includes("feedback");
+
   useEffect(() => {
-    if (isActive("official-translation")) {
-      handleShowOfficialTranslations();
-    }
-    if (isActive("feedback")) {
-      handleGetFeedback();
-    }
-  }, [isActive("official-translation"), isActive("feedback")]);
+    if (!officialOpen || !dayData) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await translationsAPI.getOfficialTranslations(
+          englishCitation
+        );
+        if (!cancelled) {
+          setOfficialTranslation(DOMPurify.sanitize(response) || "");
+        }
+      } catch (err) {
+        console.error("handleShowOfficialTranslations:", err);
+        if (!cancelled) {
+          setOfficialTranslation(
+            `<p class="tool-error">Could not load the NET text for this passage. You can still use the Parabible link below.</p>`
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [officialOpen, englishCitation, dayData, setOfficialTranslation]);
 
-  // Get official NET translations from Parabible API
-  async function handleShowOfficialTranslations() {
-    try {
-      if (!dayData) return;
-      const response = await translationsAPI.getOfficialTranslations(
-        englishCitation
-      );
-      const cleanResponse = DOMPurify.sanitize(response);
-      setOfficialTranslation(cleanResponse || "");
-    } catch (err) {
-      console.log("Error in handleShowOfficialTranslations:", err);
-    }
-  }
-
-  // Gets feedback on translation from OpenAI
-  async function handleGetFeedback() {
-    try {
-      setFeedbackHtml(`<p>Analyzing your translation...</p>`);
-      const payload = [translation, englishCitation];
-      const response = await translationsAPI.getTranslationFeedback(payload);
-      const cleanResponse = DOMPurify.sanitize(response);
-      setFeedbackHtml(cleanResponse || "");
-    } catch (err) {
-      console.log("Error in handleGetFeedback: ", err);
-    }
-  }
+  useEffect(() => {
+    if (!feedbackOpen) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setFeedbackHtml(`<p>Analyzing your translation…</p>`);
+        const payload = {
+          translation,
+          citation: englishCitation,
+          originalText: dayData?.text || "",
+          sourceLanguage: language,
+        };
+        const response = await translationsAPI.getTranslationFeedback(payload);
+        if (!cancelled) {
+          setFeedbackHtml(DOMPurify.sanitize(response) || "");
+        }
+      } catch (err) {
+        console.error("handleGetFeedback:", err);
+        if (!cancelled) {
+          const msg = err.message || "Something went wrong.";
+          setFeedbackHtml(
+            `<p class="tool-error">${DOMPurify.sanitize(msg)}</p>`
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    feedbackOpen,
+    translation,
+    englishCitation,
+    language,
+    dayData,
+    setFeedbackHtml,
+  ]);
 
   return (
     <div>
