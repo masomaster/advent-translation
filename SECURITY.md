@@ -22,7 +22,7 @@ This document summarizes the main risks, what is mitigated in code, and what sti
 | **Helmet** | Default headers with **CSP disabled** (CRA single-origin bundle); `crossOriginEmbedderPolicy` disabled to avoid breaking common embeds. |
 | **Reverse proxy** | `trust proxy` enabled in production so rate limits use client IP correctly on Vercel. |
 | **Error responses** | Production avoids returning raw internal exception strings on some failure paths (`clientSafeDetail`). |
-| **Firebase Admin env** | Service account JSON is validated at startup (parse + required fields). |
+| **Firebase Admin env** | Service account JSON is read from `FIREBASE_ADMIN_SERVICE_ACCOUNT_KEY` at startup (`JSON.parse`). |
 | **Client HTML** | Feedback/NET HTML is sanitized with **DOMPurify** before `dangerouslySetInnerHTML`. |
 
 ## Residual risks / backlog

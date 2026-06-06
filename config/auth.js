@@ -14,11 +14,7 @@ async function verifyFirebaseToken(req, res, next) {
     req.user = decodedToken; // Set the Firebase user info on req.user
     next();
   } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("Error fetching user data:", error);
-    } else {
-      console.error("Error fetching user data:", error.code || error.message);
-    }
+    console.error("Error fetching user data:", error);
     return res.status(401).json({ message: "Unauthorized" });
   }
 }

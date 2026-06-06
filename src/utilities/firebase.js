@@ -16,27 +16,18 @@ import {
   Timestamp,
 } from "firebase/firestore";
 
-/** CRA inlines REACT_APP_* at build time; trim so Vercel/.env paste whitespace cannot break the API key. */
-function webEnv(name) {
-  const v = process.env[name];
-  if (v == null) return undefined;
-  const s = String(v).trim();
-  if (s === "") return undefined;
-  return s;
-}
-
 const firebaseConfig = {
-  apiKey: webEnv("REACT_APP_FIREBASE_API_KEY"),
-  authDomain: webEnv("REACT_APP_FIREBASE_AUTH_DOMAIN"),
-  projectId: webEnv("REACT_APP_FIREBASE_PROJECT_ID"),
-  storageBucket: webEnv("REACT_APP_FIREBASE_STORAGE_BUCKET"),
-  messagingSenderId: webEnv("REACT_APP_FIREBASE_MESSAGING_SENDER_ID"),
-  appId: webEnv("REACT_APP_FIREBASE_APP_ID"),
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth = getAuth();
+const db = getFirestore();
 
 async function emailSignUp(signUpData) {
   const {
