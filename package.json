@@ -13,6 +13,7 @@
   "author": "Mason D. Lancaster",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.101.0",
     "@firebase/firestore": "^4.7.4",
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
@@ -26,10 +27,10 @@
     "express": "^4.21.1",
     "firebase": "^11.0.1",
     "firebase-admin": "^13.0.0",
+    "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.3",
     "morgan": "^1.10.0",
-    "openai": "^4.69.0",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
     "react-scripts": "^5.0.1",
@@ -50,5 +51,6 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
-  }
+  },
+  "proxy": "http://localhost:3001"
 }
