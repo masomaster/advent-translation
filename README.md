@@ -47,11 +47,20 @@ The proxy is a **dev-only** CRA feature; production (`npm start` → `node serve
 
 ### Environment variables
 
-Copy `.env.example` to `.env` and set at least:
+Copy [`.env.example`](./.env.example) to `.env` for local development and fill in values.
+
+**Vercel:** CRA reads `REACT_APP_*` only when **`vercel-build`** runs (`react-scripts build`). Add the same keys in **Settings → Environment Variables** for **Production** and **Preview** (and **Development** if you use it); after changing them, trigger a **new deployment** so the bundle is rebuilt.
+
+1. [Firebase Console](https://console.firebase.google.com/) → your project → **Project settings** (gear) → **General** → scroll to **Your apps** → pick the Web app → copy the `firebaseConfig` object fields.
+2. [Vercel](https://vercel.com/) → your project → **Settings** → **Environment Variables**.
+3. Create one variable per name below; paste the matching value; enable **Production**, **Preview**, and (optional) **Development** for each.
+4. **Deployments** → open the latest deployment → **⋯** → **Redeploy** (or push a new commit) after changing variables so the client bundle picks them up.
+
+Required names (same as `.env.example`):
 
 - `DATABASE_URL` — MongoDB connection string
 - `FIREBASE_ADMIN_SERVICE_ACCOUNT_KEY` — JSON string for the Firebase Admin SDK (server). Required on Vercel for authenticated API routes.
-- `REACT_APP_FIREBASE_API_KEY`, `REACT_APP_FIREBASE_AUTH_DOMAIN`, `REACT_APP_FIREBASE_PROJECT_ID`, `REACT_APP_FIREBASE_STORAGE_BUCKET`, `REACT_APP_FIREBASE_MESSAGING_SENDER_ID`, `REACT_APP_FIREBASE_APP_ID` — client Firebase config. **Create React App inlines these at `npm run build`**, so they must exist in the environment **during the Vercel build** (not only at runtime). In Vercel → Settings → Environment Variables, add each `REACT_APP_*` and enable them for **Preview** and **Production**, then redeploy.
+- `REACT_APP_FIREBASE_API_KEY`, `REACT_APP_FIREBASE_AUTH_DOMAIN`, `REACT_APP_FIREBASE_PROJECT_ID`, `REACT_APP_FIREBASE_STORAGE_BUCKET`, `REACT_APP_FIREBASE_MESSAGING_SENDER_ID`, `REACT_APP_FIREBASE_APP_ID` — from the Firebase web SDK config (see step 1).
 - `ANTHROPIC_API_KEY` — required for **Show Feedback on Your Translation** (Claude). Optional `ANTHROPIC_MODEL` overrides the default (`claude-sonnet-4-5`).
 
 **Show NET Translation** loads the NET Bible text from [labs.bible.org](https://labs.bible.org/) (no API key). The legacy Parabible JSON endpoint used previously no longer returns verse data reliably.
