@@ -1,1 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output
+build/
+
+# Environment and secrets
+.env
+.env.*.local
 serviceAccountKey.json
+
+# OS / editor
+.DS_Store
+*.log

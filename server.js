@@ -2,12 +2,15 @@ const express = require("express");
 const path = require("path");
 const favicon = require("serve-favicon");
 const logger = require("morgan");
+const helmet = require("helmet");
 
 require("dotenv").config();
 require("./config/database");
+require("./config/firebaseAdmin"); // initializeApp() before any route uses verifyFirebaseToken
 
 const app = express();
 
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(logger("dev"));
 app.use(express.json());
 
