@@ -7,8 +7,8 @@ const translationSchema = new Schema(
       type: String,
       required: true,
     },
-    greek: String,
-    hebrew: String,
+    greek: { type: String, maxlength: 120000, default: "" },
+    hebrew: { type: String, maxlength: 120000, default: "" },
     day: {
       type: Number,
       required: true,

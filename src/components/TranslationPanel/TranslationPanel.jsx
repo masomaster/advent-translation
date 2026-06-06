@@ -59,8 +59,8 @@ export default function TranslationPanel({
   async function handleSubmit(evt) {
     evt.preventDefault();
     const results = await saveTranslation();
-    if (results[language]) setTranslation(results[language]);
-    else setTranslation("");
+    if (!results) return;
+    setTranslation(results[language] ?? "");
   }
 
   // Moves current day up or down and resets to Hebrew
@@ -117,6 +117,7 @@ export default function TranslationPanel({
               <Tools
                 dayData={dayData}
                 englishCitation={englishCitation}
+                language={language}
                 officialTranslation={officialTranslation}
                 setOfficialTranslation={setOfficialTranslation}
                 translation={translation}
@@ -124,7 +125,6 @@ export default function TranslationPanel({
                 setFeedbackHtml={setFeedbackHtml}
                 paraBibleLink={paraBibleLink}
                 activeSections={activeSections}
-                setActiveSections={setActiveSections}
                 toggleSection={toggleSection}
                 isActive={isActive}
               />

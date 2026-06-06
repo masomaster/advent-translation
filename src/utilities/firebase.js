@@ -25,6 +25,22 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  const root = document.getElementById("root");
+  if (root) {
+    root.innerHTML =
+      '<div style="padding:2rem;font-family:system-ui,sans-serif;max-width:42rem;line-height:1.5">' +
+      "<h1 style=\"font-size:1.25rem\">Configuration error</h1>" +
+      "<p>Firebase client variables were not available when this app was built. " +
+      "CRA bakes <code>REACT_APP_*</code> into the JS bundle at build time.</p>" +
+      "<p><strong>Vercel:</strong> Project → Settings → Environment Variables — add every " +
+      "<code>REACT_APP_FIREBASE_*</code> value and enable them for <strong>Preview</strong> " +
+      "(and Production), then redeploy.</p>" +
+      "</div>";
+  }
+  throw new Error("Missing REACT_APP_FIREBASE_* at build time");
+}
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();

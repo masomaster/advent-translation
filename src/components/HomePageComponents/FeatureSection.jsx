@@ -17,7 +17,7 @@ function FeatureSection() {
         },
         {
           title: "Real-Time Feedback",
-          description: "Receive detailed, language-specific feedback on word choice, grammar, and syntax.",
+          description: "Receive structured, language-specific feedback (Claude) on word choice, grammar, syntax, and fidelity to the original.",
           icon: <FontAwesomeIcon icon={faComments} />,
         },
         {

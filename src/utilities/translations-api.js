@@ -10,9 +10,10 @@ export async function getDayTranslations(day) {
 }
 
 export async function getOfficialTranslations(dayVerses) {
-  return sendRequest(`${BASE_URL}/official/${dayVerses}`, "GET");
+  const params = new URLSearchParams({ passage: String(dayVerses) });
+  return sendRequest(`${BASE_URL}/official?${params.toString()}`, "GET");
 }
 
-export async function getTranslationFeedback(translationAndCitation) {
-  return sendRequest(`${BASE_URL}/feedback`, "POST", translationAndCitation);
+export async function getTranslationFeedback(payload) {
+  return sendRequest(`${BASE_URL}/feedback`, "POST", payload);
 }
