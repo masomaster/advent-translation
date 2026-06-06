@@ -12,3 +12,4 @@ serviceAccountKey.json
 # OS / editor
 .DS_Store
 *.log
+.vercel
