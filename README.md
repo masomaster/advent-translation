@@ -32,6 +32,7 @@ To do this, `package.json` includes these:
   },
 ```
 
+The **`build/`** folder is not committed (gitignored). Run **`npm run build`** once before **`npm start`** when testing production mode locally. On Vercel, **`vercel-build`** runs `react-scripts build` so static assets exist beside `server.js`.
 
 ### Development
 
