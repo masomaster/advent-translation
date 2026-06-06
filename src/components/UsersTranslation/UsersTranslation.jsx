@@ -17,17 +17,24 @@ export default function UsersTranslation({
 
   // When day changes, either load any existing translations or clear the form
   useEffect(() => {
-    try {
-      translationsAPI.getDayTranslations(currentDay).then((translations) => {
+    let cancelled = false;
+    translationsAPI
+      .getDayTranslations(currentDay)
+      .then((translations) => {
+        if (cancelled) return;
         if (translations && translations[language])
           setTranslation(translations[language]);
         else setTranslation("");
         setOfficialTranslation("");
+      })
+      .catch((err) => {
+        console.error("Error loading day translations:", err);
+        if (!cancelled) setTranslation("");
       });
-    } catch (err) {
-      console.log("Error in useEffect: ", err);
-    }
-  }, [language, currentDay, languageIsHebrew]);
+    return () => {
+      cancelled = true;
+    };
+  }, [language, currentDay, languageIsHebrew, setTranslation, setOfficialTranslation]);
 
   /* HANDLE FUNCTIONS */
   // Adjusts the height of the textarea to match the text

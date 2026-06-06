@@ -50,19 +50,15 @@ export default function App() {
   }, []);
 
   function returnInitialMaxDate() {
-    const currentDate = new Date().getDate();
-    const currentYear = new Date().getFullYear();
-    const isDecember = new Date().getMonth() === 11;
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+    const isDecember = now.getMonth() === 11;
 
-    // If during Dec '24, set maxDate to currentDate or 25, whichever is less
-    if (currentYear === 2024 && isDecember) {
-      return currentDate < 26 ? currentDate : 25;
+    // During December, unlock through today's calendar day (capped at 25).
+    if (isDecember) {
+      return Math.min(dayOfMonth, 25);
     }
-    // If before Dec '24, allow only 1 day
-    if (currentYear === 2024 && !isDecember) {
-      return 1;
-    }
-    // Otherwise, allow all 25 days
+    // Outside December, all days stay available for practice and review.
     return 25;
   }
 
@@ -77,6 +73,7 @@ export default function App() {
       return results;
     } catch (err) {
       console.log("Error in saveTranslation: ", err);
+      return null;
     }
   }
 
