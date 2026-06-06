@@ -1,5 +1,17 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const Translation = require("../../models/translation");
+const {
+  parseDay,
+  sanitizeTranslationPayload,
+  safePassageQuery,
+  clampFeedbackStrings,
+  mergeTranslationStringsForUpdate,
+} = require("../../lib/translationInput");
+
+function clientSafeDetail(err) {
+  if (process.env.NODE_ENV === "production") return undefined;
+  return err && err.message ? String(err.message) : undefined;
+}
 
 /** NET text via labs.bible.org (NET Bible). */
 const LABS_BIBLE_BASE =
@@ -28,9 +40,13 @@ async function fetchNetPlainText(citation) {
 async function create(req, res) {
   try {
     const firebaseUID = req.user.uid;
+    const fields = sanitizeTranslationPayload(req.body);
+    if (!fields) {
+      return res.status(400).json({ message: "Invalid day or payload" });
+    }
 
     const existingTranslation = await Translation.findOne({
-      day: req.body.day,
+      day: fields.day,
       firebaseUID: firebaseUID,
     });
 
@@ -38,16 +54,22 @@ async function create(req, res) {
       return update(req, res);
     }
 
-    if (req.body.hebrew === "" && req.body.greek === "") return;
-    if (req.body.hebrew && !req.body.greek) req.body.greek = "";
-    if (req.body.greek && !req.body.hebrew) req.body.hebrew = "";
+    if (fields.hebrew === "" && fields.greek === "") {
+      return res
+        .status(400)
+        .json({ message: "Hebrew and Greek cannot both be empty" });
+    }
 
-    req.body.firebaseUID = firebaseUID;
-    const dayTranslations = await Translation.create(req.body);
+    const merged = { ...fields };
+    if (merged.hebrew && !merged.greek) merged.greek = "";
+    if (merged.greek && !merged.hebrew) merged.hebrew = "";
+
+    merged.firebaseUID = firebaseUID;
+    const dayTranslations = await Translation.create(merged);
     res.json(dayTranslations);
   } catch (err) {
     console.error("Error in translation controller: ", err);
-    res.status(400).json({ message: err.message || "Bad request" });
+    res.status(400).json({ message: "Could not save translation" });
   }
 }
 
@@ -55,15 +77,41 @@ async function update(req, res) {
   const firebaseUID = req.user.uid;
 
   try {
-    const filter = { day: req.body.day, firebaseUID: firebaseUID };
+    const fields = sanitizeTranslationPayload(req.body);
+    if (!fields) {
+      return res.status(400).json({ message: "Invalid day or payload" });
+    }
+
+    const urlDay =
+      req.params.id !== undefined ? parseDay(req.params.id) : null;
+    if (urlDay != null && urlDay !== fields.day) {
+      return res
+        .status(400)
+        .json({ message: "Day in URL must match day in request body" });
+    }
+
+    const filter = { day: fields.day, firebaseUID: firebaseUID };
+    const existing = await Translation.findOne(filter);
+    if (!existing) {
+      return res.status(404).json({ message: "Translation not found" });
+    }
+
+    const mergedStrings = mergeTranslationStringsForUpdate(existing, req.body);
+    if (!mergedStrings) {
+      return res.status(400).json({ message: "Invalid payload" });
+    }
+
     const dayTranslations = await Translation.findOneAndUpdate(
       filter,
-      req.body,
-      { new: true }
+      { $set: { hebrew: mergedStrings.hebrew, greek: mergedStrings.greek } },
+      { new: true, runValidators: true }
     );
+    if (!dayTranslations) {
+      return res.status(404).json({ message: "Translation not found" });
+    }
     res.json(dayTranslations);
   } catch (err) {
-    res.status(400).json({ message: err.message || "Bad request" });
+    res.status(400).json({ message: "Could not update translation" });
   }
 }
 
@@ -71,21 +119,28 @@ async function getDayTranslations(req, res) {
   const firebaseUID = req.user.uid;
 
   try {
+    const day = parseDay(req.params.id);
+    if (day == null) {
+      return res.status(400).json({ message: "Invalid day" });
+    }
+
     const dayTranslations = await Translation.findOne({
-      day: req.params.id,
+      day,
       firebaseUID: firebaseUID,
     });
 
     res.json(dayTranslations);
   } catch (err) {
-    res.status(400).json({ message: err.message || "Bad request" });
+    res.status(400).json({ message: "Could not load translation" });
   }
 }
 
 async function getOfficialTranslations(req, res) {
-  const citation = String(req.query.passage || "").trim();
+  const citation = safePassageQuery(req.query.passage);
   if (!citation) {
-    return res.status(400).json({ message: "Missing passage query (e.g. ?passage=John+1:1)" });
+    return res.status(400).json({
+      message: "Missing or invalid passage query (e.g. ?passage=John+1:1)",
+    });
   }
 
   try {
@@ -98,7 +153,7 @@ async function getOfficialTranslations(req, res) {
     console.error("getOfficialTranslations:", err.message);
     res.status(502).json({
       message: "Could not load NET text for this passage.",
-      detail: err.message,
+      detail: clientSafeDetail(err),
     });
   }
 }
@@ -192,11 +247,12 @@ function parseFeedbackRequestBody(body) {
 }
 
 async function getTranslationFeedback(req, res) {
-  const parsed = parseFeedbackRequestBody(req.body);
-  if (!parsed) {
+  const parsedRaw = parseFeedbackRequestBody(req.body);
+  if (!parsedRaw) {
     return res.status(400).json({ message: "Invalid request body" });
   }
-  const { translation, citation, originalText, sourceLanguage } = parsed;
+  const { translation, citation, originalText, sourceLanguage } =
+    clampFeedbackStrings(parsedRaw);
 
   if (!translation || !String(translation).trim()) {
     return res.status(400).json({ message: "Missing translation text" });
@@ -271,7 +327,7 @@ ${translation.trim()}`;
 
     res.status(502).json({
       message: "Could not generate feedback right now. Try again shortly.",
-      detail: err.message || String(err),
+      ...(clientSafeDetail(err) && { detail: clientSafeDetail(err) }),
     });
   }
 }

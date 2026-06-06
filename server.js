@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const favicon = require("serve-favicon");
-const logger = require("morgan");
+const morgan = require("morgan");
 const helmet = require("helmet");
 
 require("dotenv").config();
@@ -10,16 +10,26 @@ require("./config/firebaseAdmin"); // initializeApp() before any route uses veri
 
 const app = express();
 
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(logger("dev"));
-app.use(express.json());
+app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+app.use(
+  process.env.NODE_ENV === "production" ? morgan("combined") : morgan("dev")
+);
+app.use(express.json({ limit: "512kb" }));
+
+// API before static so /api/* is never served as a static file or SPA fallback.
+app.use("/api/translations", require("./routes/api/translations"));
 
 // Configure both serve-favicon & static middleware
 // to serve from the production 'build' folder
 app.use(favicon(path.join(__dirname, "build", "favicon.ico")));
 app.use(express.static(path.join(__dirname, "build")));
-
-app.use("/api/translations", require("./routes/api/translations"));
 
 // The following "catch all" route (note the *) is necessary
 // to return the index.html on all non-AJAX requests
