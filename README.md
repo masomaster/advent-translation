@@ -15,7 +15,7 @@ Kept it simple to get it off the ground asap:
 - Node.js
 - Express
 
-Hosted on Vercel
+Hosted on Vercel. Security overview: [SECURITY.md](./SECURITY.md).
 
 ## Getting Started
 
@@ -34,11 +34,15 @@ To do this, `package.json` includes these:
 
 
 ### Development
-But for development, I want the React dev build available for easy updating, but then they run on different ports, so add this to `package.json`:
-  `"proxy": "http://localhost:3001"`
-Be sure to remove it when building and deploying. To run things for dev, run `npm run start-client` to start up the react dev environment, and `node server.js` to start up the Express server. The proxy will link them.
 
-Be sure to remove  `"proxy": "http://localhost:3001"` from `package.json` and run `npm run build` before deploying for prod.
+Run **both** processes: the API and the React dev server.
+
+1. **`node server.js`** (or `npm run start-server`) on **port 3001** — serves `/api/*` and loads `.env`.
+2. **`npm run start-client`** on **port 3000** — CRA dev UI.
+
+`package.json` includes **`"proxy": "http://localhost:3001"`** so browser calls to `/api/translations/...` from `http://localhost:3000` are forwarded to Express. Without that proxy (or without the API running), you will see errors like **Cannot POST /api/translations/feedback** and saved verses will not load.
+
+The proxy is a **dev-only** CRA feature; production (`npm start` → `node server.js`) serves the API and `build/` from one server, so you do **not** need to remove the proxy field before deploying to Vercel.
 
 ### Environment variables
 
