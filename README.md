@@ -40,4 +40,13 @@ Be sure to remove it when building and deploying. To run things for dev, run `np
 
 Be sure to remove  `"proxy": "http://localhost:3001"` from `package.json` and run `npm run build` before deploying for prod.
 
+### Environment variables
+
+Copy `.env.example` to `.env` and set at least:
+
+- `DATABASE_URL` — MongoDB connection string
+- `ANTHROPIC_API_KEY` — required for **Show Feedback on Your Translation** (Claude). Optional `ANTHROPIC_MODEL` overrides the default (`claude-sonnet-4-5`).
+
+**Show NET Translation** loads the NET Bible text from [labs.bible.org](https://labs.bible.org/) (no API key). The legacy Parabible JSON endpoint used previously no longer returns verse data reliably.
+
 
